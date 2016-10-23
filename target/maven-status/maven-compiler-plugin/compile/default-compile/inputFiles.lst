@@ -1,10 +1,10 @@
-/home/wam274/HPS/HPSEvasion/src/main/java/edu/nyu/cs/hps/evasion/game/Game.java
-/home/wam274/HPS/HPSEvasion/src/main/java/edu/nyu/cs/hps/evasion/game/BresenhamsAlgorithm.java
-/home/wam274/HPS/HPSEvasion/src/main/java/edu/nyu/cs/hps/evasion/game/Wall.java
-/home/wam274/HPS/HPSEvasion/src/main/java/edu/nyu/cs/hps/evasion/game/HorizontalWall.java
-/home/wam274/HPS/HPSEvasion/src/main/java/edu/nyu/cs/hps/evasion/game/PositionAndVelocity.java
-/home/wam274/HPS/HPSEvasion/src/main/java/edu/nyu/cs/hps/evasion/game/GameState.java
-/home/wam274/HPS/HPSEvasion/src/main/java/edu/nyu/cs/hps/evasion/game/VerticalWall.java
-/home/wam274/HPS/HPSEvasion/src/main/java/edu/nyu/cs/hps/evasion/game/IO.java
-/home/wam274/HPS/HPSEvasion/src/main/java/edu/nyu/cs/hps/evasion/game/GameHost.java
-/home/wam274/HPS/HPSEvasion/src/main/java/edu/nyu/cs/hps/evasion/Application.java
+/Users/Whitney/Desktop/NYU/5th Year/HPS/Evasion/src/main/java/edu/nyu/cs/hps/evasion/game/Wall.java
+/Users/Whitney/Desktop/NYU/5th Year/HPS/Evasion/src/main/java/edu/nyu/cs/hps/evasion/Application.java
+/Users/Whitney/Desktop/NYU/5th Year/HPS/Evasion/src/main/java/edu/nyu/cs/hps/evasion/game/BresenhamsAlgorithm.java
+/Users/Whitney/Desktop/NYU/5th Year/HPS/Evasion/src/main/java/edu/nyu/cs/hps/evasion/game/GameHost.java
+/Users/Whitney/Desktop/NYU/5th Year/HPS/Evasion/src/main/java/edu/nyu/cs/hps/evasion/game/HorizontalWall.java
+/Users/Whitney/Desktop/NYU/5th Year/HPS/Evasion/src/main/java/edu/nyu/cs/hps/evasion/game/IO.java
+/Users/Whitney/Desktop/NYU/5th Year/HPS/Evasion/src/main/java/edu/nyu/cs/hps/evasion/game/Game.java
+/Users/Whitney/Desktop/NYU/5th Year/HPS/Evasion/src/main/java/edu/nyu/cs/hps/evasion/game/VerticalWall.java
+/Users/Whitney/Desktop/NYU/5th Year/HPS/Evasion/src/main/java/edu/nyu/cs/hps/evasion/game/GameState.java
+/Users/Whitney/Desktop/NYU/5th Year/HPS/Evasion/src/main/java/edu/nyu/cs/hps/evasion/game/PositionAndVelocity.java

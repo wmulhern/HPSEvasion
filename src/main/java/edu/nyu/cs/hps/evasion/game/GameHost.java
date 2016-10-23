@@ -1,8 +1,9 @@
 package edu.nyu.cs.hps.evasion.game;
 
 import java.awt.*;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,10 +14,13 @@ import java.util.stream.Collectors;
 
 public class GameHost {
 
-  public static void hostGame(int portP1, int portP2, int maxWalls, int wallPlacementDelay) throws Exception {
+  public static void hostGame(int portP1, int portP2, int maxWalls, int wallPlacementDelay, String displayHost, int displayPort) throws Exception {
 
     System.out.println("Player 1: connect to port " + portP1);
     System.out.println("Player 2: connect to port " + portP2);
+    if (displayHost != null) {
+      System.out.println("Accept display socket connection on " + displayHost + ":" + displayPort);
+    }
 
     IO io = new IO();
     List<Integer> ports = new ArrayList<>();
@@ -24,7 +28,24 @@ public class GameHost {
     ports.add(portP2);
     io.start(ports);
 
+    Socket displaySocket = null;
+    PrintWriter displayWriter = null;
+    if (displayHost != null) {
+      while (displayWriter == null) {
+        try {
+          displaySocket = new Socket(displayHost, displayPort);
+          displayWriter = new PrintWriter(displaySocket.getOutputStream(), true);
+        } catch (Exception e) {
+          System.out.println("Display output error: " + e.getMessage());
+          Thread.sleep(1000);
+        }
+      }
+    }
+
     System.out.println("Starting game.");
+    if(displayWriter != null) {
+      displayWriter.println("begin");
+    }
 
     int hunterIndex = 0;
     int preyIndex = 1;
@@ -45,52 +66,67 @@ public class GameHost {
       io.sendLine(hunterIndex, "hunter");
       io.sendLine(preyIndex, "prey");
 
+      if(displayWriter != null){
+        displayWriter.println("hunter: " + io.getName(hunterIndex));
+        displayWriter.println("prey: " + io.getName(preyIndex));
+      }
+
       Thread.sleep(1000 / 60);
 
       boolean hunterTimeout = false;
       boolean preyTimeout = false;
       boolean done = false;
       while (!done) {
+        hunterTimeout = false;
+        preyTimeout = false;
+
         String gameString = gameNum + " " + game.getState().toString();
 
-        Future<IO.Response> hunterResponseFuture = io.getResponse(hunterIndex, hunterTime.toMillis() + " " + gameString);
-        Future<IO.Response> preyResponseFuture = io.getResponse(preyIndex, preyTime.toMillis() + " " + gameString);
+        if(displayWriter != null) {
+          displayWriter.println(hunterTime.toMillis() + " " + preyTime.toMillis() + " " + gameString);
+        }
 
         IO.Response hunterResponse = null;
         IO.Response preyResponse = null;
-        if(hunterTime.minus(preyTime).isNegative()){
-          Instant start = Instant.now();
-          try {
-            hunterResponse = hunterResponseFuture.get(hunterTime.toNanos(), TimeUnit.NANOSECONDS);
-          } catch (TimeoutException e) {
-            hunterTimeout = true;
-          }
-          Duration elapsed = Duration.between(start, Instant.now());
-          Duration toWait = preyTime.minus(elapsed);
-          try {
-            preyResponse = preyResponseFuture.get(toWait.toNanos(), TimeUnit.NANOSECONDS);
-          } catch (TimeoutException e) {
-            preyTimeout = true;
-          }
-        } else {
-          Instant start = Instant.now();
-          try {
-            preyResponse = preyResponseFuture.get(preyTime.toNanos(), TimeUnit.NANOSECONDS);
-          } catch (TimeoutException e) {
-            preyTimeout = true;
-          }
-          Duration elapsed = Duration.between(start, Instant.now());
-          Duration toWait = hunterTime.minus(elapsed);
-          try {
-            hunterResponse = hunterResponseFuture.get(toWait.toNanos(), TimeUnit.NANOSECONDS);
-          } catch (TimeoutException e) {
-            hunterTimeout = true;
-          }
+
+        Future<IO.Response> hunterResponseFuture = null;
+        try {
+          hunterResponseFuture = io.getResponse(hunterIndex, hunterTime.toMillis() + " " + gameString);
+          hunterResponse = hunterResponseFuture.get(hunterTime.toNanos(), TimeUnit.NANOSECONDS);
+        } catch (TimeoutException e) {
+          hunterTimeout = true;
+        }
+
+        Future<IO.Response> preyResponseFuture = null;
+        try {
+          preyResponseFuture = io.getResponse(preyIndex, preyTime.toMillis() + " " + gameString);
+          preyResponse = preyResponseFuture.get(preyTime.toNanos(), TimeUnit.NANOSECONDS);
+        } catch (TimeoutException e) {
+          preyTimeout = true;
         }
 
         if(hunterTimeout || preyTimeout) {
+          String result;
+          if (hunterTimeout && preyTimeout) {
+            result = "Both timed out! Trying to resume...";
+          } else if (hunterTimeout) {
+            result = io.getName(hunterIndex) + " timed out! Trying to resume...";
+          } else {
+            result = io.getName(preyIndex) + " timed out! Trying to resume...";
+          }
+          System.out.println(result);
+          if(displayWriter != null) {
+            displayWriter.println("result: " + result);
+          }
+          if (hunterTimeout) {
+            hunterResponseFuture.get();
+          }
+          if(preyTimeout) {
+            preyResponseFuture.get();
+          }
           break;
         }
+
 
         hunterTime = hunterTime.minus(hunterResponse.elapsed);
         preyTime = preyTime.minus(preyResponse.elapsed);
@@ -99,6 +135,18 @@ public class GameHost {
         preyTimeout = preyTime.isNegative();
 
         if(hunterTimeout || preyTimeout){
+          String result;
+          if (hunterTimeout && preyTimeout) {
+            result = "Both timed out!";
+          } else if (hunterTimeout) {
+            result = io.getName(hunterIndex) + " timed out!";
+          } else {
+            result = io.getName(preyIndex) + " timed out!";
+          }
+          System.out.println(result);
+          if(displayWriter != null) {
+            displayWriter.println("result: " + result);
+          }
           break;
         }
 
@@ -158,14 +206,13 @@ public class GameHost {
         }
       }
 
-      if(hunterTimeout && preyTimeout){
-        System.out.println("Both timed out!");
-      } else if(hunterTimeout){
-        System.out.println(io.getName(hunterIndex) + " timed out!");
-      } else if (preyTimeout){
-        System.out.println(io.getName(preyIndex) + " timed out!");
-      } else {
-        System.out.println("Score (hunter=" + io.getName(hunterIndex) + ", prey=" + io.getName(preyIndex) + "): " + game.getState().ticknum);
+      String result;
+      if(!hunterTimeout && !preyTimeout){
+        result = "Score (hunter=" + io.getName(hunterIndex) + ", prey=" + io.getName(preyIndex) + "): " + game.getState().ticknum;
+        System.out.println(result);
+        if(displayWriter != null) {
+          displayWriter.println("result: " + result);
+        }
       }
 
       hunterIndex = 1-hunterIndex;
@@ -175,17 +222,28 @@ public class GameHost {
       Thread.sleep(1000 / 60);
     }
 
+    String finalResult = "Undetermined final result due to timeouts.";
     if(p1Timeouts == 0 && p2Timeouts == 0) {
       if (p1AsPreyScore == p2AsPreyScore) {
-        System.out.println("Tied! Both = " + p1AsPreyScore);
+        finalResult = "Tied! Both = " + p1AsPreyScore;
+      } else {
+        String winner = (p1AsPreyScore > p2AsPreyScore) ? io.getName(0) : io.getName(1);
+        finalResult = winner + " wins (" + io.getName(0) + " = " + p1AsPreyScore + ", " + io.getName(1) + " = " + p2AsPreyScore + ")";
       }
-      String winner = (p1AsPreyScore > p2AsPreyScore) ? io.getName(0) : io.getName(1);
-      System.out.println(winner + " wins (" + io.getName(0) + " = " + p1AsPreyScore + ", " + io.getName(1) + " = " + p2AsPreyScore + ")");
+    }
+    System.out.println(finalResult);
+    if(displayWriter != null) {
+      displayWriter.println("finalresult: " + finalResult);
     }
 
     io.sendLine(hunterIndex, "done");
     io.sendLine(preyIndex, "done");
 
     io.destroy();
+    if(displayWriter != null) {
+      displayWriter.println("done");
+      displayWriter.close();
+      displaySocket.close();
+    }
   }
 }

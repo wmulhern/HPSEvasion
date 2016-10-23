@@ -20,7 +20,7 @@ public class VerticalWall implements Wall {
 
   public String toString(){
     StringBuilder stringBuilder = new StringBuilder()
-      .append("0").append(" ")
+      .append("1").append(" ")
       .append(x).append(" ")
       .append(y1).append(" ")
       .append(y2);

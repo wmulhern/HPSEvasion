@@ -1,6 +1,7 @@
 package edu.nyu.cs.hps.evasion.game;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Game {
@@ -18,15 +19,13 @@ public class Game {
   }
 
   public boolean tick(WallCreationType hunterWallAction, List<Integer> hunterWallsToDelete, Point preyMovement){
-    for(Integer index : hunterWallsToDelete){
-      removeWall(index);
-    }
+    removeWalls(hunterWallsToDelete);
     Point prevHunterPos = new Point(state.hunterPosAndVel.pos);
     state.hunterPosAndVel = move(state.hunterPosAndVel);
+    doBuildAction(prevHunterPos, hunterWallAction);
     if(canPreyMove()) {
       state.preyPos = move(new PositionAndVelocity(state.preyPos, preyMovement)).pos;
     }
-    doBuildAction(prevHunterPos, hunterWallAction);
     state.ticknum++;
     if(state.wallTimer > 0){
       state.wallTimer--;
@@ -56,10 +55,14 @@ public class Game {
     }
   }
 
-  private void removeWall(int index){
-    if(index >= 0 && index < state.walls.size()) {
-      state.walls.remove(index);
+  private void removeWalls(List<Integer> indexList){
+    List<Wall> newWalls = new ArrayList<>();
+    for(int i = 0; i < state.walls.size(); ++i){
+      if(!indexList.contains(i)){
+        newWalls.add(state.walls.get(i));
+      }
     }
+    state.walls = newWalls;
   }
 
   private boolean captured(){
