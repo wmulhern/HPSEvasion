@@ -26,7 +26,7 @@ while True:
 
     print "received: " + line
 
-    val = .05 + random.uniform(0,.05)
+    val = .01
     time.sleep(val)
 
     tosend = None
@@ -48,7 +48,7 @@ while True:
                 wall = "1"
             elif x == 1:
                 wall = "2"
-            if random.randint(0,20) == 0:
+            if random.randint(0,80) == 0:
                 wall = "0 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20"
             tosend = data[1] + " " + data[2] + " " + wall
         else:
