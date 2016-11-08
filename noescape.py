@@ -612,6 +612,8 @@ while True:
 				if not in_pipe:
 					if piped and width >= 50:
 						piped = False
+					elif not piped and width <= 50:
+						piped = True
 					if not piped:
 						# if near corner, go the other way
 						corner, move[0], move[1] = near_corner()
@@ -631,8 +633,38 @@ while True:
 								move = run_away_move
 
 				else:
+					# We are in a pipe
 					if not piped:
 						piped = True
+					# RUNAWAY TO CLOSEST CORNER
+					up, down, left, right = get_corners()
+					if direction == "up":
+						move[1] = 1
+						if (prey_loc[0] - left) < (right - prey_loc[0]):
+							move[0] = -1
+						else:
+							move[0] = 1
+					elif direction == "down":
+						move[1] = -1
+						if (prey_loc[0] - left) < (right - prey_loc[0]):
+							move[0] = -1
+						else:
+							move[0] = 1
+					elif direction == "left":
+						move[0] = -1
+						if (prey_loc[1] - down) < (up - prey_loc[1]):
+							move[1] = -1
+						else:
+							move[0] = 1
+					elif direction == "right":
+						move[0] = 1
+						if (prey_loc[1] - down) < (up - prey_loc[1]):
+							move[1] = -1
+						else:
+							move[0] = 1
+
+
+					'''
 					x, y, ticks = hunter_hit_pipe(direction, wall)
 					aim_x, aim_y = stop_near_hunter(x, y, ticks, direction, wall)
 					if aim_x > prey_loc[0]:
@@ -643,9 +675,7 @@ while True:
 						move[1] = 1
 					elif aim_y < prey_loc[1]:
 						move[1] = -1
-					# We are in a pipe
-					#move[0] = 1 #movement in x direction
-					#move[1] = 1 #movement in y direction
+					'''
 				result = [game_num,tick_num,move[0], move[1]]
 		if hunter_flag:
 			if initial_pass == True and hunter_vel != [1,1]:
